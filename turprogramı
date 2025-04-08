@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tur Rezervasyon Uygulaması</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .currency-container {
+            display: flex;
+            align-items: center;
+        }
+        .currency-container input {
+            flex: 1;
+        }
+        .currency-container span {
+            margin: 0 10px;
+        }
+        button {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2ecc71;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            white-space: pre-line;
+        }
+        .share-button {
+            background-color: #25D366;
+            margin-top: 10px;
+        }
+        .share-button:hover {
+            background-color: #128C7E;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tur Rezervasyon Bilgileri</h1>
+        
+        <div class="form-group">
+            <label for="turTarihi">Tur Tarihi:</label>
+            <input type="date" id="turTarihi" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="turAdi">Tur Adı:</label>
+            <input type="text" id="turAdi" placeholder="Örn: Kapadokya Turu" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="kisiAdi">Kişi Adı:</label>
+            <input type="text" id="kisiAdi" placeholder="Ad Soyad" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="telefonNo">Telefon No:</label>
+            <input type="tel" id="telefonNo" placeholder="05XX XXX XX XX" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="ucretTL">Ücret (TL):</label>
+            <input type="number" id="ucretTL" placeholder="TL cinsinden ücret" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Euro Karşılığı:</label>
+            <div class="currency-container">
+                <input type="number" id="euroKuru" placeholder="Güncel Euro kuru" value="35.5" required>
+                <span>€ = </span>
+                <input type="text" id="ucretEuro" placeholder="Euro cinsinden ücret" readonly>
+            </div>
+        </div>
+        
+        <button id="olusturBtn">Bilgileri Oluştur</button>
+        
+        <div class="result" id="sonuc" style="display: none;"></div>
+        
+        <button class="share-button" id="paylasBtnWP" style="display: none;">WhatsApp'ta Paylaş</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ucretTLInput = document.getElementById('ucretTL');
+            const euroKuruInput = document.getElementById('euroKuru');
+            const ucretEuroInput = document.getElementById('ucretEuro');
+            
+            // TL veya Euro kuru değiştiğinde Euro karşılığını hesapla
+            function hesaplaEuro() {
+                if (ucretTLInput.value && euroKuruInput.value) {
+                    const tlMiktar = parseFloat(ucretTLInput.value);
+                    const euroKuru = parseFloat(euroKuruInput.value);
+                    if (tlMiktar && euroKuru) {
+                        const euroMiktar = tlMiktar / euroKuru;
+                        ucretEuroInput.value = euroMiktar.toFixed(2);
+                    }
+                }
+            }
+            
+            ucretTLInput.addEventListener('input', hesaplaEuro);
+            euroKuruInput.addEventListener('input', hesaplaEuro);
+            
+            document.getElementById('olusturBtn').addEventListener('click', function() {
+                const turTarihi = document.getElementById('turTarihi').value;
+                const turAdi = document.getElementById('turAdi').value;
+                const kisiAdi = document.getElementById('kisiAdi').value;
+                const telefonNo = document.getElementById('telefonNo').value;
+                const ucretTL = document.getElementById('ucretTL').value;
+                const ucretEuro = document.getElementById('ucretEuro').value;
+                
+                // Tüm alanlar doldurulmuş mu kontrol et
+                if (!turTarihi || !turAdi || !kisiAdi || !telefonNo || !ucretTL) {
+                    alert('Lütfen tüm alanları doldurun!');
+                    return;
+                }
+                
+                // Tarihi güzel formatta göster
+                const tarihObj = new Date(turTarihi);
+                const formatlananTarih = tarihObj.toLocaleDateString('tr-TR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+                
+                // Rezervasyon bilgilerini oluştur
+                const mesaj = `🏝️ TUR REZERVASYON BİLGİLERİ 🏝️\n\n` +
+                              `📅 Tur Tarihi: ${formatlananTarih}\n` +
+                              `🚌 Tur Adı: ${turAdi}\n` +
+                              `👤 Kişi Adı: ${kisiAdi}\n` +
+                              `📞 Telefon: ${telefonNo}\n` +
+                              `💰 Ücret: ${ucretTL} TL (${ucretEuro} €)\n\n` +
+                              `Rezervasyonunuz başarıyla oluşturulmuştur.\n` +
+                              `İyi tatiller dileriz!`;
+                
+                // Sonucu göster
+                const sonucDiv = document.getElementById('sonuc');
+                sonucDiv.textContent = mesaj;
+                sonucDiv.style.display = 'block';
+                
+                // Paylaş butonunu göster
+                document.getElementById('paylasBtnWP').style.display = 'block';
+            });
+            
+            document.getElementById('paylasBtnWP').addEventListener('click', function() {
+                const mesaj = document.getElementById('sonuc').textContent;
+                const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mesaj)}`;
+                window.open(whatsappUrl, '_blank');
+            });
+        });
+    </script>
+</body>
+</html>
